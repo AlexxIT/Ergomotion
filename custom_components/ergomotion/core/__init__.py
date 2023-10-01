@@ -1,0 +1,2 @@
+DOMAIN = "ergomotion"
+NAME = "Ergomotion"

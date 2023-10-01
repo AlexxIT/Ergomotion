@@ -1,0 +1,17 @@
+{
+  "domain": "ergomotion",
+  "name": "Ergomotion Smart Beds",
+  "codeowners": [
+    "@AlexxIT"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth_adapters"
+  ],
+  "documentation": "https://github.com/AlexxIT/Ergomotion",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/AlexxIT/Ergomotion/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
