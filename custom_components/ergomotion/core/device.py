@@ -72,7 +72,7 @@ class Device:
                     round(int.from_bytes(data[3:5], "little") / HEAD_MAX * 100), 100
                 ),
                 "foot_position": min(
-                    round(int.from_bytes(data[5:7], "little") / HEAD_MAX * 100), 100
+                    round(int.from_bytes(data[5:7], "little") / FOOT_MAX * 100), 100
                 ),
                 "head_move": (data[13] & 1) > 0,
                 "foot_move": (data[13] & 2) > 0,
