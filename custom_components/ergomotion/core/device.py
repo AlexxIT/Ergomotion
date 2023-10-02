@@ -33,7 +33,6 @@ class Device:
         self.client = Client(device, self.on_data)
 
         self.connected = False
-        self.conn_info = {"mac": device.address}
 
         self.current_data = None
         self.current_state = {}
@@ -53,14 +52,6 @@ class Device:
             self.updates_connect.append(handler)
         else:
             self.updates_state.append(handler)
-
-    def update_ble(self, adv: AdvertisementData):
-        self.conn_info["last_seen"] = (datetime.now(timezone.utc),)
-        if adv:
-            self.conn_info["rssi"] = adv.rssi
-
-        for handler in self.updates_connect:
-            handler()
 
     def on_data(self, char: BleakGATTCharacteristic | None, data: bytes | bool):
         if char is None:
@@ -109,7 +100,9 @@ class Device:
 
     def attribute(self, attr: str) -> Attribute:
         if attr == "connection":
-            return Attribute(is_on=self.connected, extra=self.conn_info)
+            return Attribute(
+                is_on=self.connected, extra={"mac": self.client.device.address}
+            )
 
         if attr == "head_position":
             return Attribute(

@@ -16,8 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        if device := devices.get(entry.entry_id):
-            device.update_ble(service_info)
+        if devices.get(entry.entry_id):
             return
 
         devices[entry.entry_id] = Device(entry.title, service_info.device)
