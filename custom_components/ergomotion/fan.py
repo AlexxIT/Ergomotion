@@ -25,7 +25,6 @@ class XFan(XEntity, FanEntity):
         self._attr_percentage = attribute.get("percentage")
         self._attr_preset_mode = attribute.get("current")
         self._attr_preset_modes = attribute.get("options")
-        self._attr_extra_state_attributes = attribute.get("extra")
 
         if self.hass:
             self._async_write_ha_state()
