@@ -176,13 +176,20 @@ class Device:
                 elif current > target:
                     command |= 0x00000008
 
+            elif attr == "foot_massage":
+                if current < target:
+                    command |= 0x00000400
+                elif current > target:
+                    command |= 0x01000000
+            elif attr == "head_massage":
+                if current < target:
+                    command |= 0x00000800
+                elif current > target:
+                    command |= 0x00800000
+
             # multiple push buttons
             elif attr == "timer_target":
                 command |= 0x00000200
-            elif attr == "foot_massage":
-                command |= 0x00000400
-            elif attr == "head_massage":
-                command |= 0x00000800
             elif attr == "led":
                 command |= 0x00020000
 
