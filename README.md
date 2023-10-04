@@ -2,8 +2,6 @@
 
 [Home Assistant](https://www.home-assistant.io/) custom component for control [Ergomotion Smart Beds](https://eu.ergomotion.com/) via Bluetooth module.
 
-Tested only with **Remote Style B** (check [mobile app](https://play.google.com/store/apps/developer?id=Ergomotion)).
-
 Supports:
 
 - head and foot actual position with online moving status (`cover` position)
@@ -11,6 +9,7 @@ Supports:
 - massage timeout control (`fan` mode) and remain time counter (`light` attributes)
 - scene selection (`light` effects)
 - fast flat scene (turn off `light`)
+- led control (`light`)
 
 ![](assets/demo1.png)
 
