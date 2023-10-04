@@ -1,15 +1,13 @@
 import time
-from datetime import datetime, timezone
 from typing import TypedDict, Callable
 
-from bleak import BLEDevice, AdvertisementData, BleakGATTCharacteristic
+from bleak import BLEDevice, BleakGATTCharacteristic
 
 from .client import Client
 
-HEAD_MAX = 22500
-FOOT_MAX = 11500
-TIMER_OPTIONS = ["10", "20", "30"]
+MIN_STEP = 100
 SCENE_OPTIONS = ["flat", "lounge", "tv", "zerog"]
+TIMER_OPTIONS = ["10", "20", "30"]
 
 
 class Attribute(TypedDict, total=False):
@@ -27,10 +25,10 @@ class Attribute(TypedDict, total=False):
 
 
 class Device:
-    def __init__(self, name: str, device: BLEDevice):
+    def __init__(self, name: str, device: BLEDevice | None):
         self.name = name
 
-        self.client = Client(device, self.on_data)
+        self.client = Client(device, self.on_data) if device else None
 
         self.connected = False
 
@@ -54,7 +52,7 @@ class Device:
             self.updates_state.append(handler)
 
     def on_data(self, char: BleakGATTCharacteristic | None, data: bytes | bool):
-        if char is None:
+        if isinstance(data, bool):
             # connected true/false update
             self.connected = data
 
@@ -62,35 +60,42 @@ class Device:
                 handler()
             return
 
-        if not data.startswith(b"\xed\xfe\x16") or len(data) < 16:
-            return
-
         if self.current_data != data:
+            if data[0] == 0xED and len(data) == 16:
+                data1 = data[3:]
+                data2 = data[9:]
+            elif data[0] == 0xF0 and len(data) == 19:
+                data1 = data[3:]
+                data2 = data[10:]
+            else:
+                return
+
+            head_position = int.from_bytes(data1[0:2], "little")
+            foot_position = int.from_bytes(data1[2:4], "little")
+            remain = int.from_bytes(data2[0:3], "little")
+            move = data2[4] & 0xF
+            timer = data2[5]
+
             self.current_data = data
             self.current_state = {
-                "head_position": min(
-                    round(int.from_bytes(data[3:5], "little") / HEAD_MAX * 100), 100
-                ),
-                "foot_position": min(
-                    round(int.from_bytes(data[5:7], "little") / FOOT_MAX * 100), 100
-                ),
-                "head_move": (data[13] & 1) > 0,
-                "foot_move": (data[13] & 2) > 0,
+                "head_position": head_position if head_position != 0xFFFF else 0,
+                "foot_position": foot_position if foot_position != 0xFFFF else 0,
+                "head_move": move != 0xF and move & 1 > 0,
+                "foot_move": move != 0xF and move & 2 > 0,
                 # Hass uses int, not round
-                "head_massage": int(data[7] / 6 * 100),
-                "foot_massage": int(data[8] / 6 * 100),
-                "timer_target": TIMER_OPTIONS[data[14] - 1]
-                if data[14] != 0xFF
-                else None,
-                "timer_remain": round(int.from_bytes(data[9:12], "little") / 100),
+                "head_massage": int(data1[4] / 6 * 100),
+                "foot_massage": int(data1[5] / 6 * 100),
+                "timer_target": TIMER_OPTIONS[timer - 1] if timer != 0xFF else None,
+                "timer_remain": round(remain / 100),
+                "led": data2[4] & 0x40 > 0,
             }
 
             self.current_state["scene"] = (
-                self.current_state["head_position"]
-                or self.current_state["foot_position"]
-                or self.current_state["head_massage"]
-                or self.current_state["foot_massage"]
-            ) != 0
+                self.current_state["head_position"] > MIN_STEP
+                or self.current_state["foot_position"] > MIN_STEP
+                or self.current_state["head_massage"] > 0
+                or self.current_state["foot_massage"] > 0
+            )
 
             for handler in self.updates_state:
                 handler()
@@ -134,7 +139,7 @@ class Device:
                 extra={"timer_remain": remain} if remain else None,
             )
 
-    def set_attribute(self, name: str, value: int | str):
+    def set_attribute(self, name: str, value: int | str | None):
         self.target_state[name] = value
         self.client.ping()
 
@@ -142,14 +147,19 @@ class Device:
         command = 0
 
         for attr, target in list(self.target_state.items()):
-            current = self.current_state.get(attr)
-            if current == target:
-                self.target_state.pop(attr)
-
             if attr == "stop":
                 self.target_state.clear()
                 command = 0
                 break
+
+            current = self.current_state.get(attr)
+            if (
+                abs(current - target) < MIN_STEP  # not best idea
+                if attr.endswith("position")
+                else current == target
+            ):
+                self.target_state.pop(attr)
+                continue
 
             # hold buttons
             elif attr == "head_position":
