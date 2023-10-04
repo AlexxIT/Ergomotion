@@ -139,6 +139,9 @@ class Device:
                 extra={"timer_remain": remain} if remain else None,
             )
 
+        if attr == "led":
+            return Attribute(is_on=self.current_state.get(attr))
+
     def set_attribute(self, name: str, value: int | str | None):
         self.target_state[name] = value
         self.client.ping()
@@ -180,6 +183,8 @@ class Device:
                 command |= 0x00000400
             elif attr == "head_massage":
                 command |= 0x00000800
+            elif attr == "led":
+                command |= 0x00020000
 
             # single push buttons
             elif attr == "scene":

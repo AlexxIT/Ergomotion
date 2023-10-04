@@ -12,7 +12,7 @@ async def async_setup_entry(
 ):
     device = hass.data[DOMAIN][config_entry.entry_id]
 
-    add_entities([XScene(device, "scene")])
+    add_entities([XScene(device, "scene"), XLed(device, "led")])
 
 
 class XScene(XEntity, LightEntity):
@@ -34,3 +34,19 @@ class XScene(XEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         self.device.set_attribute(self.attr, "flat")
+
+
+class XLed(XEntity, LightEntity):
+    def internal_update(self):
+        attribute = self.device.attribute(self.attr)
+
+        self._attr_is_on = attribute.get("is_on")
+
+        if self.hass:
+            self._async_write_ha_state()
+
+    async def async_turn_on(self, effect: str = None, **kwargs) -> None:
+        self.device.set_attribute(self.attr, True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        self.device.set_attribute(self.attr, False)
