@@ -188,3 +188,63 @@ def test_630v2():
         "timer_remain": 556,
         "timer_target": "10",
     }
+
+
+def test_630v3():
+    device = Device("test", None)
+
+    device.on_data(None, bytes.fromhex("f1fe16 000000000000 0000000003ff00000C01EB"))
+    assert device.current_state == {
+        "foot_massage": 0,
+        "foot_move": False,
+        "foot_position": 0,
+        "head_massage": 0,
+        "head_move": False,
+        "head_position": 0,
+        "led": False,
+        "scene": False,
+        "timer_remain": 0,
+        "timer_target": None,
+    }
+
+    device.on_data(None, bytes.fromhex("f1fe16 6b514b230303 37EA0000020100000C0397"))
+    assert device.current_state == {
+        "foot_massage": 50,
+        "foot_move": False,
+        "foot_position": 9035,
+        "head_massage": 50,
+        "head_move": False,
+        "head_position": 20843,
+        "led": False,
+        "scene": True,
+        "timer_remain": 600,
+        "timer_target": "10",
+    }
+
+    device.on_data(None, bytes.fromhex("f1fe166B514B2300000000000003ff00000C03BF"))
+    assert device.current_state == {
+        "foot_massage": 0,
+        "foot_move": False,
+        "foot_position": 9035,
+        "head_massage": 0,
+        "head_move": False,
+        "head_position": 20843,
+        "led": False,
+        "scene": True,
+        "timer_remain": 0,
+        "timer_target": None,
+    }
+
+    device.on_data(None, bytes.fromhex("f1fe16 6B514B230000 0000000043ff00000C037F"))
+    assert device.current_state == {
+        "foot_massage": 0,
+        "foot_move": False,
+        "foot_position": 9035,
+        "head_massage": 0,
+        "head_move": False,
+        "head_position": 20843,
+        "led": True,
+        "scene": True,
+        "timer_remain": 0,
+        "timer_target": None,
+    }

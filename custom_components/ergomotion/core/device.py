@@ -67,13 +67,16 @@ class Device:
             elif data[0] == 0xF0 and len(data) == 19:
                 data1 = data[3:]
                 data2 = data[10:]
+            elif data[0] == 0xF1 and len(data) == 20:
+                data1 = data[3:]
+                data2 = data[9:]
             else:
                 return
 
             head_position = int.from_bytes(data1[0:2], "little")
             foot_position = int.from_bytes(data1[2:4], "little")
             remain = int.from_bytes(data2[0:3], "little")
-            move = data2[4] & 0xF
+            move = data2[4] & 0xF if data[0] != 0xF1 else 0xF
             timer = data2[5]
 
             self.current_data = data
