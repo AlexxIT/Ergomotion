@@ -62,49 +62,46 @@ class Device:
 
         if self.current_data != data:
             if data[0] == 0xED and len(data) == 16:
-                data1 = data[3:]
-                data2 = data[9:]
+                self.parse_data(data, data[3:], data[9:])
             elif data[0] == 0xF0 and len(data) == 19:
-                data1 = data[3:]
-                data2 = data[10:]
+                self.parse_data(data, data[3:], data[10:])
             elif data[0] == 0xF1 and len(data) == 20:
-                data1 = data[3:]
-                data2 = data[9:]
-            else:
-                return
-
-            head_position = int.from_bytes(data1[0:2], "little")
-            foot_position = int.from_bytes(data1[2:4], "little")
-            remain = int.from_bytes(data2[0:3], "little")
-            move = data2[4] & 0xF if data[0] != 0xF1 else 0xF
-            timer = data2[5]
-
-            self.current_data = data
-            self.current_state = {
-                "head_position": head_position if head_position != 0xFFFF else 0,
-                "foot_position": foot_position if foot_position != 0xFFFF else 0,
-                "head_move": move != 0xF and move & 1 > 0,
-                "foot_move": move != 0xF and move & 2 > 0,
-                # Hass uses int, not round
-                "head_massage": int(data1[4] / 6 * 100),
-                "foot_massage": int(data1[5] / 6 * 100),
-                "timer_target": TIMER_OPTIONS[timer - 1] if timer != 0xFF else None,
-                "timer_remain": round(remain / 100),
-                "led": data2[4] & 0x40 > 0,
-            }
-
-            self.current_state["scene"] = (
-                self.current_state["head_position"] > MIN_STEP
-                or self.current_state["foot_position"] > MIN_STEP
-                or self.current_state["head_massage"] > 0
-                or self.current_state["foot_massage"] > 0
-            )
-
-            for handler in self.updates_state:
-                handler()
+                self.parse_data(data, data[3:], data[9:])
 
         if self.target_state:
             self.send_command()
+
+    def parse_data(self, data: bytes, data1: bytes, data2: bytes):
+        self.current_data = data
+
+        head_position = int.from_bytes(data1[0:2], "little")
+        foot_position = int.from_bytes(data1[2:4], "little")
+        remain = int.from_bytes(data2[0:3], "little")
+        move = data2[4] & 0xF if data[0] != 0xF1 else 0xF
+        timer = data2[5]
+
+        self.current_state = {
+            "head_position": head_position if head_position != 0xFFFF else 0,
+            "foot_position": foot_position if foot_position != 0xFFFF else 0,
+            "head_move": move != 0xF and move & 1 > 0,
+            "foot_move": move != 0xF and move & 2 > 0,
+            # Hass uses int, not round
+            "head_massage": int(data1[4] / 6 * 100),
+            "foot_massage": int(data1[5] / 6 * 100),
+            "timer_target": TIMER_OPTIONS[timer - 1] if timer != 0xFF else None,
+            "timer_remain": round(remain / 100),
+            "led": data2[4] & 0x40 > 0,
+        }
+
+        self.current_state["scene"] = (
+            self.current_state["head_position"] > MIN_STEP
+            or self.current_state["foot_position"] > MIN_STEP
+            or self.current_state["head_massage"] > 0
+            or self.current_state["foot_massage"] > 0
+        )
+
+        for handler in self.updates_state:
+            handler()
 
     def attribute(self, attr: str) -> Attribute:
         if attr == "connection":
