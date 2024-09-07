@@ -35,18 +35,24 @@ class Client:
     async def _ping_loop(self):
         while self.ping_time > time.time():
             try:
+                _LOGGER.debug("connecting...")
+
                 self.client = await establish_connection(
                     BleakClient, self.device, self.device.address
                 )
 
-                self.callback(None, True)
+                self.callback(char=None, data=True)
 
                 await self.client.start_notify(
                     "0000ffe4-0000-1000-8000-00805f9b34fb", self.callback
                 )
 
+                _LOGGER.debug("connected")
+
                 while (delay := self.ping_time - time.time()) > 0:
                     await asyncio.sleep(delay)
+
+                _LOGGER.debug("disconnecting...")
 
                 await self.client.disconnect()
             except TimeoutError:
@@ -70,6 +76,7 @@ class Client:
 
     async def _send_coro(self):
         try:
+            _LOGGER.debug(f"send command: {self.send_data.hex()}")
             await self.client.write_gatt_char(
                 "0000ffe9-0000-1000-8000-00805f9b34fb", self.send_data, True
             )
