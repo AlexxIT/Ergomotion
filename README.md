@@ -41,7 +41,9 @@ By default, the integration maintains a connection to the bed **for two minutes*
 - last command
 - last manual state update
 
-For manual update use `homeassistant.update_entity` service with `binary_sensor.connection` entity:
+### How to have bed always connected?
+
+To maintain "always connected" state you can trigger "manual update" via "Automation" script, e.g. use `homeassistant.update_entity` service to keep `binary_sensor.connection` entity in connected state:
 
 ```yaml
 automation:
