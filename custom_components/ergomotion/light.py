@@ -1,4 +1,4 @@
-from homeassistant.components.light import LightEntity, LightEntityFeature
+from homeassistant.components.light import ColorMode, LightEntity, LightEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,6 +17,7 @@ async def async_setup_entry(
 
 class XScene(XEntity, LightEntity):
     _attr_icon = "mdi:bed"
+    _attr_supported_color_modes = ColorMode.ONOFF
     _attr_supported_features = LightEntityFeature.EFFECT
 
     def internal_update(self):
@@ -37,6 +38,8 @@ class XScene(XEntity, LightEntity):
 
 
 class XLed(XEntity, LightEntity):
+    _attr_supported_color_modes = ColorMode.ONOFF
+
     def internal_update(self):
         attribute = self.device.attribute(self.attr)
 
