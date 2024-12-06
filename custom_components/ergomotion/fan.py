@@ -17,7 +17,18 @@ async def async_setup_entry(
 
 class XFan(XEntity, FanEntity):
     _attr_speed_count = 6
-    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+
+    try:
+        _attr_supported_features = (
+            FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.SET_SPEED
+            | FanEntityFeature.PRESET_MODE
+        )
+    except AttributeError:
+        _attr_supported_features = (
+            FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+        )
 
     def internal_update(self):
         attribute = self.device.attribute(self.attr)
