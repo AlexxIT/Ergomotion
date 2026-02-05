@@ -19,13 +19,10 @@ class XEntity(Entity):
             manufacturer=NAME,
             name=device.name or NAME,
         )
-        self._attr_name = device.name + " " + attr.replace("_", " ").title()
-        self._attr_unique_id = device.mac.replace(":", "") + "_" + attr
-
-        self.entity_id = DOMAIN + "." + self._attr_unique_id
+        self._attr_name = f"{device.name} {attr.replace('_', ' ').title()}"
+        self._attr_unique_id = device.mac.replace(":", "").lower() + "_" + attr
 
         self.internal_update()
-
         device.register_update(attr, self.internal_update)
 
     def internal_update(self):

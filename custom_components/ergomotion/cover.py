@@ -19,14 +19,26 @@ async def async_setup_entry(
 class XCover(XEntity, CoverEntity, RestoreEntity):
     _attr_is_closed = None
 
+    def __init__(self, device, attr):
+        super().__init__(device, attr)
+
+        self._attr_extra_state_attributes = {
+            "max_position": 100
+        }
+
+
     async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+
         state = await self.async_get_last_state()
-        max_position = state.attributes.get("max_position") if state else None
-        self._attr_extra_state_attributes = {"max_position": max_position or 100}
+        if state and "max_position" in state.attributes:
+            self._attr_extra_state_attributes["max_position"] = (
+                state.attributes.get("max_position", 100)
+            )
 
     @property
     def max_position(self):
-        return self._attr_extra_state_attributes["max_position"]
+        return self._attr_extra_state_attributes.get("max_position", 100)
 
     def internal_update(self):
         attribute = self.device.attribute(self.attr)
